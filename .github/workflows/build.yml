@@ -23,16 +23,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Stable Pinned Capacitor
+      - name: Setup Capacitor & Android Project
         run: |
           npm init -y
           npm install @capacitor/core@6.1.2 @capacitor/cli@6.1.2 @capacitor/android@6.1.2
           npx cap init SixRush com.sixrush.cricketscorer --web-dir www
           npx cap add android
-          yes | sdkmanager --licenses || true
           npx cap sync android
 
       - name: Build Debug APK
