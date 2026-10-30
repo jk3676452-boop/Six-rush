@@ -15,7 +15,7 @@ jobs:
       - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Node.js
@@ -23,28 +23,30 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Tools & Setup Project
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Stable Pinned Capacitor
         run: |
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          cat << 'EOF' > capacitor.config.json
-          {
-            "appId": "com.sixrush.cricketscorer",
-            "appName": "SixRush",
-            "webDir": "www"
-          }
-          EOF
+          npm install @capacitor/core@6.1.2 @capacitor/cli@6.1.2 @capacitor/android@6.1.2
+          npx cap init SixRush com.sixrush.cricketscorer --web-dir www
           npx cap add android
+          yes | sdkmanager --licenses || true
           npx cap sync android
 
-      - name: Build APK & AAB
+      - name: Build Debug APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+
+      - name: Build Play Store AAB
+        run: |
+          cd android
           ./gradlew bundleDebug
 
-      - name: Upload APK File
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SixRush-APK
