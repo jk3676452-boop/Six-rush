@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#07090E" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>SixRush — Feel Every Run</title>
+  
+  <style>
+    :root {
+      --bg-base: #07090E;
+      --bg-panel: #0E121B;
+      --bg-subpanel: #141A26;
+      --bg-glass: rgba(14, 18, 27, 0.85);
+      --border-hud: #1E2738;
+      --border-bright: #2C3952;
+      --lime: #00FF66;
+      --lime-glow: rgba(0, 255, 102, 0.35);
+      --lime-dim: rgba(0, 255, 102, 0.12);
+      --amber: #FFB800;
+      --red: #FF334B;
+      --blue: #00B4D8;
+      --text-white: #FFFFFF;
+      --text-muted: #8E9BAE;
+      --font-mono: 'Chakra Petch', 'Courier New', Courier, monospace;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-white);
+      font-family: var(--font-ui);
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Main Console Chassis */
+    #sixrush-app {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: var(--bg-base);
+      border-left: 1px solid var(--border-hud);
+      border-right: 1px solid var(--border-hud);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-bottom: 74px;
+    }
+
+    /* Top Command Header */
+    header {
+      background: linear-gradient(180deg, #101522 0%, #0A0D15 100%);
+      border-bottom: 2px solid var(--border-hud);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .brand-symbol {
+      width: 32px;
+      height: 32px;
+      background: var(--lime);
+      color: #000;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      box-shadow: 0 0 12px var(--lime-glow);
+    }
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .brand-text h1 span { color: var(--lime); }
+    .brand-text p {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    .status-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--lime-dim);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 255, 102, 0.3);
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--lime);
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--lime);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--lime);
+      animation: pulseAnim 1.4s infinite;
+    }
+    @keyframes pulseAnim { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* HUD Panels & Containers */
+    .hud-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-hud);
+      border-radius: 14px;
+      padding: 12px;
+      margin: 10px 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 18px rgba(0, 0, 0, 0.6);
+    }
+
+    .match-header-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-hud);
+      padding-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .giant-score-box {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 12px 0 8px 0;
+    }
+    .score-primary {
+      font-family: var(--font-mono);
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+    .score-wickets {
+      color: var(--lime);
+      font-size: 34px;
+    }
+    .overs-display {
+      text-align: right;
+      font-family: var(--font-mono);
+    }
+    .overs-num {
+      font-size: 26px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .metrics-matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      background: var(--bg-subpanel);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hud);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-align: center;
+    }
+    .matrix-cell b {
+      display: block;
+      font-size: 14px;
+      color: var(--lime);
+      margin-top: 2px;
+    }
+
+    /* Player Console Card */
+    .player-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--bg-subpanel);
+      margin-bottom: 6px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .player-line.striker {
+      border-color: rgba(0, 255, 102, 0.4);
+      background: rgba(0, 255, 102, 0.05);
+    }
+    .player-line-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+    }
+    .player-line-stat {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--lime);
+    }
+
+    /* Tactile Keypad */
+    .keypad-grid {
+      margin: 0 12px 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .key-btn {
+      background: linear-gradient(180deg, #171E2C 0%, #0F1420 100%);
+      border: 1px solid var(--border-hud);
+      color: #FFF;
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+      padding: 13px 0;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+      transition: all 0.06s ease;
+    }
+    .key-btn:active {
+      transform: scale(0.95);
+      border-color: var(--lime);
+    }
+    .key-four {
+      color: var(--lime);
+      border-color: rgba(0, 255, 102, 0.4);
+      background: linear-gradient(180deg, rgba(0, 255, 102, 0.12) 0%, #0F1420 100%);
+      grid-column: span 2;
+    }
+    .key-six {
+      color: var(--amber);
+      border-color: rgba(255, 184, 0, 0.4);
+      background: linear-gradient(180deg, rgba(255, 184, 0, 0.12) 0%, #0F1420 100%);
+      grid-column: span 1;
+    }
+    .key-out {
+      color: #FFF;
+      background: linear-gradient(180deg, var(--red) 0%, #8A0012 100%);
+      border-color: #FF5C70;
+      grid-column: span 1;
+      font-size: 14px;
+    }
+    .key-aux {
+      font-size: 11px;
+      padding: 9px 0;
+      background: #101624;
+      color: var(--text-muted);
+    }
+
+    /* Ball-By-Ball Timeline Strip */
+    .timeline-strip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+    .ball-orb {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border-hud);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .orb-w { background: var(--red); color: #FFF; border-color: #FFF; }
+    .orb-4 { background: rgba(0, 255, 102, 0.18); color: var(--lime); border-color: var(--lime); }
+    .orb-6 { background: rgba(255, 184, 0, 0.18); color: var(--amber); border-color: var(--amber); }
+
+    /* Navigation Dock */
+    .nav-dock {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 480px;
+      background: rgba(10, 13, 20, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-hud);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 999;
+    }
+    .dock-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .dock-tab.active { color: var(--lime); }
+    .dock-tab svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* Forms, Modals & Utility Components */
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-label {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: block;
+      text-transform: uppercase;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      background: var(--bg-subpanel);
+      border: 1px solid var(--border-hud);
+      color: #FFF;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: var(--font-ui);
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--lime);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--lime);
+      color: #000;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px var(--lime-glow);
+    }
+    .btn-secondary {
+      width: 100%;
+      background: var(--bg-subpanel);
+      color: #FFF;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-hud);
+      cursor: pointer;
+    }
+    .btn-danger {
+      background: rgba(255, 51, 75, 0.15);
+      color: var(--red);
+      border: 1px solid var(--red);
+    }
+
+    /* Modal Sheet */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 11, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-window {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 16px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-hud);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    /* Tables */
+    .tele-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .tele-table th {
+      background: var(--bg-subpanel);
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      text-align: left;
+      font-size: 10px;
+    }
+    .tele-table td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border-hud);
+      font-family: var(--font-mono);
+    }
+
+    /* Toast Notification */
+    #sixrush-toast {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-30px);
+      background: var(--lime);
+      color: #000;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      box-shadow: 0 0 15px var(--lime-glow);
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+    }
+    #sixrush-toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sixrush-app">
+    <!-- APP HEADER -->
+    <header>
+      <div class="brand-group" onclick="Nav.go('home')">
+        <div class="brand-symbol">6⚡</div>
+        <div class="brand-text">
+          <h1>Six<span>Rush</span></h1>
+          <p>Feel Every Run</p>
+        </div>
+      </div>
+      <div class="status-telemetry" id="header-telemetry">
+        <div class="status-dot"></div>
+        <span id="header-status-text">OFFLINE ENGINE READY</span>
+      </div>
+    </header>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="sixrush-toast">Notification</div>
+
+    <!-- VIEW 1: HOME DASHBOARD -->
+    <section id="view-home" style="display: block;">
+      <div class="hud-card" style="background: linear-gradient(135deg, #121927 0%, #0B0E16 100%); border-color: rgba(0,255,102,0.3);">
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--lime); margin-bottom: 4px;">OFFLINE-SECURE COMMAND CENTER</div>
+        <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 4px;">Cricket Management, <span style="color:var(--lime);">Engineered.</span></h2>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Instant ball scoring, full scorecard generation, multi-team database and automatic NRR standings.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button class="btn-primary" onclick="Nav.go('match_create')">+ New Match</button>
+          <button class="btn-secondary" onclick="Nav.go('tournament')">Tournaments</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 12px 10px;">
+        <button class="btn-secondary" style="padding: 12px 6px; text-align: center;" onclick="Nav.go('teams')">
+          <div style="font-size: 18px; margin-bottom: 2px;">🛡️</div>
+          <span style="font-size: 11px; font-weight: 700;">Teams</span>
+        </button>
+        <button class="btn-secondary" style="padding: 12px 6px; text-align: center;" onclick="Nav.go('players')">
+          <div style="font-size: 18px; margin-bottom: 2px;">👤</div>
+          <span style="font-size: 11px; font-weight: 700;">Players</span>
+        </button>
+        <button class="btn-secondary" style="padding: 12px 6px; text-align: center;" onclick="Nav.go('history')">
+          <div style="font-size: 18px; margin-bottom: 2px;">📜</div>
+          <span style="font-size: 11px; font-weight: 700;">History</span>
+        </button>
+      </div>
+
+      <div class="hud-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="font-size: 13px; font-family: var(--font-mono); color: var(--lime);">SAVED MATCHES (<span id="home-matches-count">0</span>)</h3>
+          <span style="font-size: 10px; color: var(--text-muted);">AUTO-SYNCED</span>
+        </div>
+        <div id="home-matches-list">
+          <!-- Dynamic Matches Cards -->
+        </div>
+      </div>
+
+      <!-- Demo Data Controller -->
+      <div class="hud-card" style="border-style: dashed;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">DEMO DATA CONTROLLER (Optional Testing)</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-secondary" style="font-size: 11px;" onclick="Store.loadDemoData()">Load Sample Tournament</button>
+          <button class="btn-secondary btn-danger" style="font-size: 11px;" onclick="Store.wipeDemoData()">Clear Demo Data</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LIVE SCORER CONSOLE -->
+    <section id="view-scorer" style="display: none;">
+      <!-- TELEMETRY HUD -->
+      <div class="hud-card">
+        <div class="match-header-strip">
+          <span id="hud-batting-team" style="font-weight: 800; color: #FFF; font-size: 13px;">BATTING TEAM</span>
+          <span id="hud-innings-label" style="color: var(--lime);">INN 1 OF 2</span>
+        </div>
+
+        <div class="giant-score-box">
+          <div class="score-primary">
+            <span id="hud-runs">0</span><span class="score-wickets" id="hud-wickets">/0</span>
+          </div>
+          <div class="overs-display">
+            <span class="overs-num" id="hud-overs">0.0</span>
+            <span style="font-size: 12px; color: var(--text-muted);" id="hud-max-overs">/6 ov</span>
+          </div>
+        </div>
+
+        <div class="metrics-matrix">
+          <div class="matrix-cell">
+            <span>CRR</span>
+            <b id="hud-crr">0.00</b>
+          </div>
+          <div class="matrix-cell">
+            <span>REQ RR</span>
+            <b id="hud-rrr" style="color: var(--amber);">--</b>
+          </div>
+          <div class="matrix-cell">
+            <span>TARGET</span>
+            <b id="hud-target">--</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- BATTERS & BOWLER COCKPIT -->
+      <div class="hud-card" style="padding: 10px 12px;">
+        <div class="player-line striker" id="striker-card">
+          <div class="player-line-name">
+            <span style="color:var(--lime);">▶</span>
+            <span id="striker-name">Striker</span>
+          </div>
+          <div class="player-line-stat">
+            <span id="striker-runs">0</span>
+            <span style="font-size: 10px; color: var(--text-muted);" id="striker-balls">(0b)</span>
+          </div>
+        </div>
+
+        <div class="player-line" id="nonstriker-card">
+          <div class="player-line-name">
+            <span style="color:var(--text-muted);">▷</span>
+            <span id="nonstriker-name">Non-Striker</span>
+          </div>
+          <div class="player-line-stat" style="color:#FFF;">
+            <span id="nonstriker-runs">0</span>
+            <span style="font-size: 10px; color: var(--text-muted);" id="nonstriker-balls">(0b)</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-hud); padding-top: 6px; font-size: 11px; font-family: var(--font-mono);">
+          <span style="color: var(--text-muted);">BOWLER: <strong style="color: #FFF;" id="bowler-name">Bowler</strong></span>
+          <span style="color: var(--lime);" id="bowler-stats">0.0 ov • 0r • 0w</span>
+        </div>
+      </div>
+
+      <!-- SCORING KEYPAD CONTROLLER -->
+      <div class="keypad-grid">
+        <button class="key-btn" onclick="Engine.recordDelivery({type:'RUN', runs:0})">0</button>
+        <button class="key-btn" onclick="Engine.recordDelivery({type:'RUN', runs:1})">1</button>
+        <button class="key-btn" onclick="Engine.recordDelivery({type:'RUN', runs:2})">2</button>
+        <button class="key-btn" onclick="Engine.recordDelivery({type:'RUN', runs:3})">3</button>
+
+        <button class="key-btn key-four" onclick="Engine.recordDelivery({type:'RUN', runs:4})">4 FOUR ⚡</button>
+        <button class="key-btn key-six" onclick="Engine.recordDelivery({type:'RUN', runs:6})">6 SIX</button>
+        <button class="key-btn key-out" onclick="UI.openWicketModal()">OUT ✕</button>
+
+        <button class="key-btn key-aux" onclick="Engine.recordDelivery({type:'WD', runs:1, isLegal:false})">WD (+1)</button>
+        <button class="key-btn key-aux" onclick="Engine.recordDelivery({type:'NB', runs:1, isLegal:false})">NB (+1)</button>
+        <button class="key-btn key-aux" onclick="Engine.rotateStrike()">ROTATE ⇄</button>
+        <button class="key-btn key-aux" onclick="Engine.undoLastBall()">UNDO ↩</button>
+      </div>
+
+      <!-- LIVE RADAR FEED -->
+      <div class="hud-card" style="padding: 10px;">
+        <div style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-bottom: 6px; display:flex; justify-content:space-between;">
+          <span>DELIVERY TIMELINE</span>
+          <span style="color:var(--lime);">RECENT BALLS</span>
+        </div>
+        <div class="timeline-strip" id="scorer-timeline">
+          <!-- Dynamic Orbs -->
+        </div>
+      </div>
+
+   
